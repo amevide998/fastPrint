@@ -1,0 +1,141 @@
+<!-- frontend/templates/frontend/produk_list.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Produk List</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 20px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        button {
+            padding: 5px 10px;
+            margin-right: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #ddd;
+        }
+
+         #loading {
+            text-align: center;
+            margin-top: 20px;
+            display: none;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Produk List</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nama Produk</th>
+                <th>Harga</th>
+                <th>Kategori</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody id="produk-list">
+        </tbody>
+    </table>
+    <div id="loading">Loading...</div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            // Fungsi untuk menampilkan data produk
+            const loading = document.getElementById("loading");
+
+            // Menampilkan loading saat fetch data
+            loading.style.display = "block";
+            function showProdukList() {
+                fetch("/api/produk-list/")
+                    .then(response => response.json())
+                    .then(data => {
+                        const produkList = document.getElementById("produk-list");
+                        produkList.innerHTML = ""; // Menghapus isi tabel sebelum menambahkan data baru
+
+                        loading.style.display = "none";
+
+
+                        data.forEach(produk => {
+                            const row = document.createElement("tr");
+
+                            // Mendapatkan nama_kategori dan nama_status dari objek kategori dan status
+                            const namaKategori = produk.kategori.nama_kategori;
+                            const namaStatus = produk.status.nama_status;
+
+                            row.innerHTML = `
+                                <td>${produk.id_produk}</td>
+                                <td>${produk.nama_produk}</td>
+                                <td>${produk.harga}</td>
+                                <td>${namaKategori}</td>
+                                <td>${namaStatus}</td>
+                                <td>
+                                    <button onclick="editProduk(${produk.id_produk})">Edit</button>
+                                    <button onclick="deleteProduk(${produk.id_produk})">Delete</button>
+                                </td>
+                            `;
+
+                            produkList.appendChild(row);
+
+                        });
+                    })
+                    .catch(error => {
+                        console.error("Error fetching data:", error)
+                        loading.style.display = "none";
+                    })}
+
+            // Panggil fungsi untuk menampilkan data produk saat halaman dimuat
+            showProdukList();
+
+            // Fungsi untuk menghapus produk
+            function deleteProduk(produkId) {
+                fetch(`/api/produk/${produkId}/`, {
+                    method: 'DELETE',
+                })
+                .then(response => {
+                    if (response.ok) {
+                        console.log(`Produk dengan ID ${produkId} berhasil dihapus`);
+                        // Menampilkan kembali data produk setelah penghapusan
+                        showProdukList();
+                    } else {
+                        console.error(`Gagal menghapus produk dengan ID ${produkId}`);
+                    }
+                })
+                .catch(error => console.error("Error deleting produk:", error));
+            }
+
+            function editProduk(produkId) {
+                console.log("Edit produk dengan ID:", produkId);
+            }
+        });
+    </script>
+</body>
+</html>
