@@ -78,10 +78,10 @@ WSGI_APPLICATION = "fastprint.wsgi.application"
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
+        'NAME': 'test_fast_print',
         'USER': 'postgres',
-        'PASSWORD': 'HugMUI8iSzbnBKYD',
-        'HOST': 'db.lpdqivjetkhlvzeurknk.supabase.co',
+        'PASSWORD': 'amevide',
+        'HOST': 'localhost',
         'PORT': '5432',
         'OPTIONS': {
             'connect_timeout': 30

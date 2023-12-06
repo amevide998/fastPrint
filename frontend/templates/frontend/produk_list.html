@@ -41,16 +41,83 @@
             background-color: #ddd;
         }
 
-         #loading {
-            text-align: center;
-            margin-top: 20px;
+        #loadingModal {
             display: none;
-            font-size: 18px;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        #loadingContent {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: white;
+        }
+
+        .show-modal-btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+
+        .show-modal-btn:hover {
+            background-color: #45a049;
+        }
+
+        .overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1;
+        }
+
+        #produkModal {
+            display: none;
+            position: absolute;
+            top: 100px;
+            left: 250px;
+            width: 40%;
+            margin: auto;
+            z-index: 10;
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        #modalTitle{
+            z-index: 10;
+        }
+
+        #produkForm {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        #submitBtn {
+            width: 80px;
         }
     </style>
 </head>
 <body>
     <h1>Produk List</h1>
+    <button class="show-modal-btn" onclick="createProduk()">Create New Produk</button>
     <table border="1">
         <thead>
             <tr>
@@ -65,77 +132,233 @@
         <tbody id="produk-list">
         </tbody>
     </table>
-    <div id="loading">Loading...</div>
+
+    <div id="loadingModal">
+        <div id="loadingContent">Loading...</div>
+    </div>
+
+    <div id="overlay" class="overlay"></div>
+
+    <div id="produkModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeProdukModal()">&times;</span>
+            <h2 id="modalTitle"></h2>
+            <form id="produkForm">
+                <input type="hidden" id="idProduk" name="idProduk">
+                <label for="namaProduk">Nama Produk:</label>
+                <input type="text" id="namaProduk" name="namaProduk" required>
+                <label for="harga">Harga:</label>
+                <input type="text" id="harga" name="harga" required>
+                <label for="kategori">Kategori:</label>
+                <select id="kategori" name="kategori" required></select>
+                <label for="status">Status:</label>
+                <select id="status" required>
+                    <option value="bisa dijual">bisa dijual</option>
+                    <option value="tidak bisa dijual">tidak bisa dijual</option>
+                </select>
+                <p id="errorValidation" style="display: none; font-size: 12px; color: red"></p>
+                <button type="button" id="submitBtn" onclick="submitProduk()">Submit</button>
+            </form>
+        </div>
+    </div>
 
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            // Fungsi untuk menampilkan data produk
-            const loading = document.getElementById("loading");
-
-            // Menampilkan loading saat fetch data
-            loading.style.display = "block";
-            function showProdukList() {
-                fetch("/api/produk-list/")
-                    .then(response => response.json())
-                    .then(data => {
-                        const produkList = document.getElementById("produk-list");
-                        produkList.innerHTML = ""; // Menghapus isi tabel sebelum menambahkan data baru
-
-                        loading.style.display = "none";
-
-
-                        data.forEach(produk => {
-                            const row = document.createElement("tr");
-
-                            // Mendapatkan nama_kategori dan nama_status dari objek kategori dan status
-                            const namaKategori = produk.kategori.nama_kategori;
-                            const namaStatus = produk.status.nama_status;
-
-                            row.innerHTML = `
-                                <td>${produk.id_produk}</td>
-                                <td>${produk.nama_produk}</td>
-                                <td>${produk.harga}</td>
-                                <td>${namaKategori}</td>
-                                <td>${namaStatus}</td>
-                                <td>
-                                    <button onclick="editProduk(${produk.id_produk})">Edit</button>
-                                    <button onclick="deleteProduk(${produk.id_produk})">Delete</button>
-                                </td>
-                            `;
-
-                            produkList.appendChild(row);
-
-                        });
-                    })
-                    .catch(error => {
-                        console.error("Error fetching data:", error)
-                        loading.style.display = "none";
-                    })}
-
-            // Panggil fungsi untuk menampilkan data produk saat halaman dimuat
-            showProdukList();
-
-            // Fungsi untuk menghapus produk
-            function deleteProduk(produkId) {
-                fetch(`/api/produk/${produkId}/`, {
-                    method: 'DELETE',
+        // LOAD DATA BEGIN
+        const loadingModal = document.getElementById("loadingModal");
+        function showLoading() {
+            loadingModal.style.display = "block";
+        }
+        function hideLoading() {
+            loadingModal.style.display = "none";
+        }
+        function showProdukList() {
+            showLoading()
+            fetch("/api/produk/")
+                .then(response => response.json())
+                .then(data => {
+                    const produkList = document.getElementById("produk-list");
+                    produkList.innerHTML = "";
+                    data.forEach(produk => {
+                        const row = document.createElement("tr");
+                        const namaKategori = produk.kategori.nama_kategori;
+                        const namaStatus = produk.status.nama_status;
+                        row.innerHTML = `
+                            <td>${produk.id_produk}</td>
+                            <td>${produk.nama_produk}</td>
+                            <td>${produk.harga}</td>
+                            <td>${namaKategori}</td>
+                            <td>${namaStatus}</td>
+                            <td>
+                                <button onclick="editProduk(${produk.id_produk})">Edit</button>
+                                <button onclick="deleteProduk(${produk.id_produk})">Delete</button>
+                            </td>
+                        `;
+                        produkList.appendChild(row);
+                    });
+                    hideLoading()
                 })
-                .then(response => {
-                    if (response.ok) {
-                        console.log(`Produk dengan ID ${produkId} berhasil dihapus`);
-                        // Menampilkan kembali data produk setelah penghapusan
-                        showProdukList();
-                    } else {
-                        console.error(`Gagal menghapus produk dengan ID ${produkId}`);
-                    }
-                })
-                .catch(error => console.error("Error deleting produk:", error));
-            }
+                .catch(error => {
+                    console.error("Error fetching data:", error);
+                    hideLoading()
+                });
+        }
+        showProdukList();
 
-            function editProduk(produkId) {
-                console.log("Edit produk dengan ID:", produkId);
+        async function getKategoriOptions() {
+            const kategoriSelect = document.getElementById("kategori");
+            if(kategoriSelect.children.length > 0){
+                return
             }
-        });
+            const response  = await fetch("/api/kategori/");
+            const data = await response.json();
+            data.forEach(kategori => {
+                        const option = document.createElement("option");
+                        option.value = kategori.nama_kategori;
+                        option.text = kategori.nama_kategori;
+                        kategoriSelect.appendChild(option);
+                    });
+        }
+
+        // LOAD DATA END
+
+
+        // MODAL DATA
+        function setProdukModal(produk){
+            document.getElementById("idProduk").value = produk.id_produk;
+            document.getElementById("namaProduk").value = produk.nama_produk;
+            document.getElementById("harga").value = produk.formatted_harga;
+            document.getElementById("kategori").value = produk.kategori.nama_kategori;
+            document.getElementById("status").value = "bisa dijual";
+        }
+        function getProdukModal(){
+            return {
+                id_produk: document.getElementById("idProduk").value,
+                nama_produk: document.getElementById("namaProduk").value,
+                harga: document.getElementById("harga").value,
+                formatted_harga: document.getElementById("harga").value,
+                kategori: {
+                    nama_kategori: document.getElementById("kategori").value
+                },
+                status: {
+                    nama_status: document.getElementById("status").value
+                }
+            }
+        }
+        // MODAL DATA
+
+        // MODAL OPEN / CLOSE
+        function openProdukModal(title, produk) {
+            getKategoriOptions()
+            setProdukModal(produk)
+            document.getElementById("modalTitle").innerText = title;
+            document.getElementById("produkModal").style.display = "block";
+            document.getElementById("overlay").style.display = "block";
+        }
+        function closeProdukModal() {
+            document.getElementById("produkModal").style.display = "none";
+            document.getElementById("overlay").style.display = "none";
+        }
+        // MODAL OPEN / CLOSE
+
+        // HANDLER FUNCTION
+        function deleteProduk(produkId) {
+            if (!confirm(`Are you sure want to delete produk with ID ${produkId}?`)) {
+                return;
+            }
+            fetch(`/api/produk/${produkId}/delete`, {
+                method: 'DELETE',
+            })
+            .then(response => {
+                if (response.ok) {
+                    console.log(`Produk dengan ID ${produkId} berhasil dihapus`);
+                    showProdukList();
+                } else {
+                    console.error(`Gagal menghapus produk dengan ID ${produkId}`);
+                }
+            })
+            .catch(error => console.error("Error deleting produk:", error));
+        }
+
+        async function editProduk(produkId) {
+            const response = await fetch(`/api/produk/${produkId}`)
+            const data = await response.json()
+            openProdukModal('Edit Produk' , data)
+        }
+
+        async function createProduk(){
+            openProdukModal('Create Produk', {
+                id_produk: '',
+                nama_produk: '',
+                formatted_harga: '',
+                kategori: {
+                    nama_kategori: '',
+                },
+                status: {
+                    nama_status: '',
+                }
+            })
+        }
+        // HANDLER FUNCTION
+
+
+         function isErrorValidationForm() {
+            const form = document.forms['produkForm'];
+            const errorValidation = document.getElementById('errorValidation');
+
+            const isEmpty = (value, message) => {
+                if (value.trim() === '') {
+                    errorValidation.innerText = message;
+                    errorValidation.style.display = 'block';
+                    return true;
+                }
+                return false;
+            };
+
+            const isNotNumber = (value, message) => {
+                if (isNaN(value.trim())) {
+                    errorValidation.innerText = message;
+                    errorValidation.style.display = 'block';
+                    return true;
+                }
+                return false;
+            };
+
+            const hideError = () => {
+                errorValidation.style.display = 'none';
+            };
+
+            if (isEmpty(form['namaProduk'].value, 'nama produk harus diisi') ||
+                isEmpty(form['harga'].value, 'harga product harus diisi') ||
+                isNotNumber(form['harga'].value, 'harga harus berupa angka') ||
+                isEmpty(form['kategori'].value, 'silahkan pilih kategori')) {
+                return true;
+            }
+            hideError();
+            return false;
+        }
+
+        // SUBMIT FUNCTION
+        async function submitProduk() {
+            const payload = getProdukModal();
+            if (isErrorValidationForm()) {
+                return;
+            }
+            const apiUrl = payload.id_produk === '' ? '/api/produk/create' : `/api/produk/${payload.id_produk}/update`;
+            try {
+                await fetch(apiUrl, {
+                    method: payload.id_produk === '' ? 'POST' : 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(payload),
+                });
+                showProdukList();
+                closeProdukModal();
+            } catch (error) {
+                console.error('Error submitting produk:', error);
+                // Handle the error as needed (e.g., show an error message to the user)
+            }
+        }
     </script>
 </body>
 </html>
