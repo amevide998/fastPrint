@@ -12,6 +12,10 @@ def home(request):
 
 @api_view(['GET'])
 def produk_list_api(request):
-    produk_list = Produk.objects.all()
-    serializer = ProdukSerializer(produk_list, many=True)
-    return JsonResponse(serializer.data, safe=False)
+    try:
+        produk_list = Produk.objects.all()
+        serializer = ProdukSerializer(produk_list, many=True)
+        return JsonResponse(serializer.data, safe=False)
+    except Exception as e:
+        return HttpResponse(e)
+
