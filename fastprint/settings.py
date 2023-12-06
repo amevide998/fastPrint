@@ -83,6 +83,9 @@ DATABASES = {
         'PASSWORD': 'HugMUI8iSzbnBKYD',
         'HOST': 'db.lpdqivjetkhlvzeurknk.supabase.co',
         'PORT': '5432',
+        'OPTIONS': {
+            'connect_timeout': 30
+        }
     }
 }
 
