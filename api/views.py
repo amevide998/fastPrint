@@ -17,7 +17,7 @@ def kategori_list(request):
         serializer = KategoriSerializer(kategori_list, many=True)
         return JsonResponse(serializer.data, safe=False)
     except Exception as e:
-        return HttpResponse(e)
+        return JsonResponse({'message': str(e)}, status=500)
 
 @api_view(['GET'])
 def produk_list_api(request):
@@ -27,7 +27,7 @@ def produk_list_api(request):
         serializer = ProdukSerializer(produk_list, many=True)
         return JsonResponse(serializer.data, safe=False)
     except Exception as e:
-        return HttpResponse(e)
+        return JsonResponse({'message': str(e)}, status=500)
 
 @api_view(['GET'])
 def get_by_id(request, produk_id):
@@ -36,7 +36,7 @@ def get_by_id(request, produk_id):
         serializer = ProdukSerializer(produk)
         return JsonResponse(serializer.data, safe=False)
     except Exception as e:
-        return HttpResponse(e)
+        return JsonResponse({'message': str(e)}, status=500)
 
 @api_view(['DELETE'])
 def produk_delete(request, produk_id):
@@ -68,6 +68,8 @@ def produk_update(request, produk_id):
 def produk_create(request):
     try:
         data = request.data
+        data['kategori'] = {'nama_kategori': data['kategori']}
+        data['status'] = {'nama_status': data['status']}
         serializer = ProdukSerializer(data=data)
         if serializer.is_valid():
             try:

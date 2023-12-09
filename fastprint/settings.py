@@ -82,10 +82,7 @@ DATABASES = {
         'USER': 'postgres',
         'PASSWORD': 'amevide',
         'HOST': 'localhost',
-        'PORT': '5432',
-        'OPTIONS': {
-            'connect_timeout': 30
-        }
+        'PORT': '5432'
     }
 }
 

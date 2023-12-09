@@ -115,7 +115,7 @@
         }
     </style>
 </head>
-<body>
+<body onload="showProdukList()">
     <h1>Produk List</h1>
     <button class="show-modal-btn" onclick="createProduk()">Create New Produk</button>
     <table border="1">
@@ -171,14 +171,14 @@
         function hideLoading() {
             loadingModal.style.display = "none";
         }
-        function showProdukList() {
+        async function showProdukList() {
             showLoading()
-            fetch("/api/produk/")
-                .then(response => response.json())
-                .then(data => {
-                    const produkList = document.getElementById("produk-list");
-                    produkList.innerHTML = "";
-                    data.forEach(produk => {
+            try {
+                const response = await fetch('/api/produk')
+            const data = await response.json()
+            const produkList = document.getElementById("produk-list");
+            produkList.innerHTML = "";
+            data.forEach(produk => {
                         const row = document.createElement("tr");
                         const namaKategori = produk.kategori.nama_kategori;
                         const namaStatus = produk.status.nama_status;
@@ -195,14 +195,11 @@
                         `;
                         produkList.appendChild(row);
                     });
-                    hideLoading()
-                })
-                .catch(error => {
-                    console.error("Error fetching data:", error);
-                    hideLoading()
-                });
+            }catch (error) {
+                console.error("Error fetching data:", error);
+            }
+            hideLoading()
         }
-        showProdukList();
 
         async function getKategoriOptions() {
             const kategoriSelect = document.getElementById("kategori");
@@ -218,7 +215,6 @@
                         kategoriSelect.appendChild(option);
                     });
         }
-
         // LOAD DATA END
 
 
@@ -236,12 +232,8 @@
                 nama_produk: document.getElementById("namaProduk").value,
                 harga: document.getElementById("harga").value,
                 formatted_harga: document.getElementById("harga").value,
-                kategori: {
-                    nama_kategori: document.getElementById("kategori").value
-                },
-                status: {
-                    nama_status: document.getElementById("status").value
-                }
+                kategori: document.getElementById("kategori").value,
+                status: document.getElementById("status").value
             }
         }
         // MODAL DATA
@@ -261,22 +253,21 @@
         // MODAL OPEN / CLOSE
 
         // HANDLER FUNCTION
-        function deleteProduk(produkId) {
+        async function deleteProduk(produkId) {
             if (!confirm(`Are you sure want to delete produk with ID ${produkId}?`)) {
                 return;
             }
-            fetch(`/api/produk/${produkId}/delete`, {
-                method: 'DELETE',
-            })
-            .then(response => {
-                if (response.ok) {
-                    console.log(`Produk dengan ID ${produkId} berhasil dihapus`);
-                    showProdukList();
-                } else {
-                    console.error(`Gagal menghapus produk dengan ID ${produkId}`);
-                }
-            })
-            .catch(error => console.error("Error deleting produk:", error));
+            try {
+                 const response = await fetch(`/api/produk/${produkId}/delete`, {
+                     method: 'DELETE',
+                 })
+                 if (!response.ok) {
+                     throw new Error(`Failed to delete produk with ID ${produkId}`);
+                     showProdukList();
+                 }
+            }catch (error) {
+                console.log('something wrong')
+            }
         }
 
         async function editProduk(produkId) {
@@ -290,16 +281,11 @@
                 id_produk: '',
                 nama_produk: '',
                 formatted_harga: '',
-                kategori: {
-                    nama_kategori: '',
-                },
-                status: {
-                    nama_status: '',
-                }
+                kategori: '',
+                status: '',
             })
         }
         // HANDLER FUNCTION
-
 
          function isErrorValidationForm() {
             const form = document.forms['produkForm'];
@@ -326,7 +312,6 @@
             const hideError = () => {
                 errorValidation.style.display = 'none';
             };
-
             if (isEmpty(form['namaProduk'].value, 'nama produk harus diisi') ||
                 isEmpty(form['harga'].value, 'harga product harus diisi') ||
                 isNotNumber(form['harga'].value, 'harga harus berupa angka') ||
@@ -356,7 +341,6 @@
                 closeProdukModal();
             } catch (error) {
                 console.error('Error submitting produk:', error);
-                // Handle the error as needed (e.g., show an error message to the user)
             }
         }
     </script>
