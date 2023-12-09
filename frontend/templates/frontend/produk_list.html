@@ -93,7 +93,8 @@
             top: 100px;
             left: 250px;
             width: 40%;
-            margin: auto;
+            margin-left: auto;
+            margin-right: auto;
             z-index: 10;
             background-color: white;
             padding: 10px;
@@ -263,8 +264,8 @@
                  })
                  if (!response.ok) {
                      throw new Error(`Failed to delete produk with ID ${produkId}`);
-                     showProdukList();
                  }
+                showProdukList();
             }catch (error) {
                 console.log('something wrong')
             }

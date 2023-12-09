@@ -53,7 +53,10 @@ def produk_delete(request, produk_id):
 def produk_update(request, produk_id):
     try:
         produk = Produk.objects.get(id_produk=produk_id)
-        serializer = ProdukSerializer(produk, data=request.data)
+        data = request.data
+        data['kategori'] = {'nama_kategori': data['kategori']}
+        data['status'] = {'nama_status': data['status']}
+        serializer = ProdukSerializer(produk, data=data)
         if serializer.is_valid():
             serializer.save()
             return JsonResponse(serializer.data, status=200)
